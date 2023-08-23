@@ -6,7 +6,7 @@ from robot_demonstrator.ABB_IRB1200 import ABB_IRB1200
 joint_values = np.load('./data/joint_values.npy')
 
 # Define robot
-robot = ABB_IRB1200("192.168.125.1", True)
+robot = ABB_IRB1200("192.168.125.1")
 
 # Get positions
 joints = np.radians(np.array(robot.con.get_joints())) # Radians

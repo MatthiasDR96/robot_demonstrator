@@ -298,8 +298,7 @@ class ABB_IRB1200_Driver:
         and fill in the DIO you want this to switch. 
         """
         msg = '97 ' + str(int(bool(value))) + ' #'
-        return
-        # return self.send(msg)
+        return self.send(msg)
     
     def send(self, message, wait_for_response=True):
         """

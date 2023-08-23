@@ -9,7 +9,7 @@ from robot_demonstrator.plot import *
 
 class ABB_IRB1200:
     
-    def __init__(self, ip, conn=False):
+    def __init__(self, ip=None):
         
         # Attributes for kinematics
         self.dofs = 0
@@ -31,8 +31,11 @@ class ABB_IRB1200:
         self.add_revolute_joint(a=0.0, alpha=-1.5707963, d=0.0, qlim=(radians(-130), radians(130)), dqlim=radians(405))
         self.add_revolute_joint(a=0.0, alpha=0.0, d=82, qlim=(radians(-400), radians(400)), dqlim=radians(600))
 
+        # Set tool frame
+        #self.set_tool_frame(t_from_xyz_r(-20*math.sqrt(2), 20*math.sqrt(2), 170, np.eye(3)))
+
         # Attribute for tcp-ip connection
-        if conn: self.con = ABB_IRB1200_Driver(ip, port_motion=5000)
+        if not ip is None: self.con = ABB_IRB1200_Driver(ip, port_motion=5000)
     
     def __iter__(self):
         return (each for each in self.links)
@@ -57,11 +60,11 @@ class ABB_IRB1200:
             t = self.base_frame
             for i in range(self.dofs):
                 t = np.dot(t, self.links[i].A(q[i]))
+            t = np.dot(t, self.tool_frame)
         else:
             t = np.identity(4)
             for i in range(segment_nr - 1):
                 t = np.dot(t, self.links[i].A(q[i]))
-        t = np.dot(t, self.tool_frame)
         return np.array(t)
     
     def fkine_multiple(self, q):
@@ -71,6 +74,7 @@ class ABB_IRB1200:
         for i in range(1, self.dofs):
             t = self.fkine(q, i + 2)
             t_base_to_ji.append(t)
+        t_base_to_ji.append(self.fkine(q))
         t_jmin1_to_ji = [t_base_to_ji[0]]
         for i in range(1, self.dofs):
             t_jmin1_to_ji.append(np.dot(np.linalg.inv(t_base_to_ji[i - 1]), t_base_to_ji[i]))
@@ -185,6 +189,7 @@ class ABB_IRB1200:
         for i in range(1, self.dofs):
             plot_frame_t(t_world_to_ji[i], ax, 'j' + str(i+1))
             plot_transf_p(t_world_to_ji[i - 1], t_jmin1_to_ji[i], ax)
+        plot_frame_t(t_world_to_ji[-1], ax, 'ee')
 
         # Set axes
         ax.set_xlabel('X-axis')

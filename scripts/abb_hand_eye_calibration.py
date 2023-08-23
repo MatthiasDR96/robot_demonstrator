@@ -12,7 +12,7 @@ fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 
 # Setup robot
-robot = ABB_IRB1200("192.168.125.1", False)
+robot = ABB_IRB1200()
 
 # Read matrices
 Q = np.load('./data/Q.npy') # Transfromation matrices from robot base to robot end-effector in meters and radians

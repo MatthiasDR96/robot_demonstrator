@@ -5,14 +5,13 @@ from scipy.spatial.transform import Rotation as R
 
 
 def r_from_quat(x, y, z, w):
-    r = R.from_quat([w, x, y, z])
+    r = R.from_quat([x, y, z, w])
     return r.as_matrix()
 
 
 def quat_from_r(r):
     r = R.from_matrix(r)
     quat = r.as_quat() # [x, y, z, w]
-    quat = [quat[3]] + list(quat[0:3])
     return quat
 
 

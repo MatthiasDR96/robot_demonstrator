@@ -2,9 +2,14 @@
 import cv2
 import yaml
 import numpy as np
+from robot_demonstrator.Camera import Camera
 
 # Read data from previous calibrations
 hsvfile = np.load('./data/demo1_hsv.npy')
+
+# Get camera
+cam = Camera()
+cam.start()
 
 # Load params
 with open("./config/config.yaml", 'r') as stream: config = yaml.safe_load(stream)
@@ -47,7 +52,7 @@ while True:
     save = cv2.getTrackbarPos('save', 'Calibration')
 
     # Read images
-    color_image = np.load('./data/color.npy')
+    color_image, depth_image = cam.read()
 
     # Define bounds on Hue value
     lower_color = np.array([hmin, smin, vmin])

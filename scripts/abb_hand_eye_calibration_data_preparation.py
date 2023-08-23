@@ -24,7 +24,7 @@ def draw_axis(img, imgpts):
 cam = Camera()
 
 # Setup robot
-robot = ABB_IRB1200("192.168.125.1", False)
+robot = ABB_IRB1200()
 
 # Get joint values
 joint_values_list = np.load('./data/joint_values.npy')

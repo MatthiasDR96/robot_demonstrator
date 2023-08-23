@@ -1,40 +1,38 @@
 # Imports
 import cv2
+import time
+import math
 import numpy as np
 import matplotlib.pyplot as plt
 from robot_demonstrator.plot import *
 from robot_demonstrator.Camera import *
+from robot_demonstrator.transformations import *
 from robot_demonstrator.ABB_IRB1200 import ABB_IRB1200
 
 # Figure
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
+#fig = plt.figure()
+#ax = fig.add_subplot(111, projection='3d')
 
 # Define camera
 cam = Camera()
+cam.start()
 
 # Define robot
-robot = ABB_IRB1200("192.168.125.1", False)
+robot = ABB_IRB1200("192.168.125.1")
+
+# Reset robot
+robot.con.set_speed([100, 50, 50, 50])
+robot.con.set_joints([0, 0, 0, 0, 0, 0])
+robot.con.set_dio(0)
 
 # Load T_bc
 T_bc = np.load('./data/T_bc.npy')
-print(T_bc)
 
-# Load real T_bc
-joints_truth = np.load('./data/joints_test.npy')
-robot.plot(ax, np.array([0, 0, 0, 0, 0, 0]))
-T_bc_real = robot.fkine(np.array(joints_truth))
-print(T_bc_real)
-
-# Read image
-image = np.load('./data/color.npy')
-depth_image = np.load('./data/depth.npy')
+# Read frame
+image, depth_image = cam.read()
 
 # Get HSV calibration params 
 hsvfile = np.load('data/demo1_hsv.npy')
-
-# Convert to RGB
-image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
 # Copy colour image
 final_image = image.copy()
@@ -55,7 +53,6 @@ mask = cv2.inRange(hsv, np.array([hsvfile[0], hsvfile[2], hsvfile[4]]), np.array
 
 # Erode to close gaps
 mask = cv2.erode(mask, None, iterations=2)
-mask = cv2.bitwise_not(mask)
 
 # Dilate to get original size
 mask = cv2.dilate(mask, None, iterations=2)
@@ -93,9 +90,13 @@ if len(contours) > 0:
 	cv2.circle(final_image, center, int(radius), (255, 0, 0), 5)
 	center_as_string = ''.join(str(center))
 
+	# Show
+	plt.figure(1)
+	plt.imshow(final_image)
+	#plt.show()
+
 	# Transform camera coordinates to world coordinates
 	p_bt = np.dot(T_bc, numpy.array([[xcam], [ycam], [zcam], [1]]))
-	print(p_bt)
 
 	# Convert to transformation matrix
 	T_ct = np.array([[1, 0, 0, xcam],
@@ -105,15 +106,33 @@ if len(contours) > 0:
 
 	# Convert to transformation matrix
 	T_bt = np.array([[1, 0, 0, p_bt[0][0]],
-						 [0, -1, 0, p_bt[1][0]],
-						 [0, 0, -1, p_bt[2][0]],
-						 [ 0, 0, 0, 1]])
+					 [0, 1, 0, p_bt[1][0]],
+					 [0, 0, -1, 60],
+					 [ 0, 0, 0, 1]])
 
 	# Plot
-	plot_frame_t(T_bc, ax)
-	plot_frame_t(T_bt, ax)
-	plt.show()
-
-	# Show image
-	#plt.imshow(final_image)
+	#plot_frame_t(T_bc, ax)
+	#plot_frame_t(T_bt, ax)
 	#plt.show()
+
+	# Set Cartesian
+	offset = [-20*math.sqrt(2), -20*math.sqrt(2), 180]
+	pose = [[T_bt[0][3] + offset[0], T_bt[1][3] + offset[1], T_bt[2][3] + offset[2]], [0, 0, 1, 0]] #list(quat_from_r(T_bt[:3,:3]))]	
+	robot.con.set_cartesian(pose)
+	time.sleep(1)
+
+	# Pick
+	robot.con.set_dio(1)
+	time.sleep(1)
+
+	# Set Cartestian
+	pose = [[288.46, -330.19, 240], list(quat_from_r(T_bt[:3,:3]))]	
+	robot.con.set_cartesian(pose)
+	time.sleep(1)
+
+	# Place
+	robot.con.set_dio(0)
+	time.sleep(1)
+
+	# Return to home
+	robot.con.set_joints([0, 0, 0, 0, 0, 0])
