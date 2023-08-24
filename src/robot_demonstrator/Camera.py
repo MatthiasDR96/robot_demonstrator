@@ -19,7 +19,7 @@ class Camera:
 		self.align = None
 
 		# Camera calibration properties
-		self.mtx = numpy.load('./data/intrinsics.npy')
+		self.mtx = numpy.load('./data/mtx.npy')
 		self.dist = numpy.load('./data/distortion.npy')
 
 		# Chessboard properties

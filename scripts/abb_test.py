@@ -25,23 +25,24 @@ print(robot.con.get_robotinfo())
 joints = [0, 0, 0, 0, 0, 0]
 
 # Set joint goal
-print(robot.con.set_joints(joints))
+#robot.con.set_joints(joints)
+#robot.con.set_cartesian([[400.0, 200.0, 600.1], [ 0.5, -0.5, 0.5, -0.5 ]])
+#robot.con.set_cartesian([[400.0, 200.0, 600.1], [ 0, 1, 0, 0 ]])
+
+time.sleep(4)
 
 # Get joints
 joints = np.radians(robot.con.get_joints())
-print(joints)
 
 # Get Cartesian pose
-cart = robot.con.get_cartesian() # [[X, Y, Z], [x, y, z, w]]
-print(cart)
-
-# Convert to transformation matrix
-T_be1 = t_from_xyz_r(cart[0][0], cart[0][1], cart[0][2], r_from_quat(cart[1][0], cart[1][1], cart[1][2], cart[1][3]))
-print(T_be1)
+pose1_abb = robot.con.get_cartesian() # [[X, Y, Z], [x, y, z, w]]
+T_be1 = t_from_xyz_r(pose1_abb[0][0], pose1_abb[0][1], pose1_abb[0][2], r_from_quat(pose1_abb[1][0], pose1_abb[1][1], pose1_abb[1][2], pose1_abb[1][3]))
+print(pose1_abb)
 
 # Robot forward kinematics
 T_be2 = robot.fkine(np.array(joints))
-print(T_be2)
+pose1_fkine = [[round(T_be2[0, 3], 1), round(T_be2[1, 3], 1), round(T_be2[2, 3], 1)], list(np.round(quat_from_r(T_be2[:3, :3]), 3))]
+print(pose1_fkine)
 
 # Plot robot
 robot.plot(ax, np.array(joints))

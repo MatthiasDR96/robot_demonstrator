@@ -10,26 +10,24 @@ from robot_demonstrator.transformations import *
 from robot_demonstrator.ABB_IRB1200 import ABB_IRB1200
 
 # Figure
-#fig = plt.figure()
-#ax = fig.add_subplot(111, projection='3d')
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+
+# Define robot
+robot = ABB_IRB1200()
 
 # Define camera
 cam = Camera()
 cam.start()
-
-# Define robot
-robot = ABB_IRB1200("192.168.125.1")
-
-# Reset robot
-robot.con.set_speed([100, 50, 50, 50])
-robot.con.set_joints([0, 0, 0, 0, 0, 0])
-robot.con.set_dio(0)
 
 # Load T_bc
 T_bc = np.load('./data/T_bc.npy')
 
 # Read frame
 image, depth_image = cam.read()
+
+# Get transformation matrix from camera to target
+ret, corners2, rvecs, tvecs, T_ct = cam.extrinsic_calibration(image)
 
 # Get HSV calibration params 
 hsvfile = np.load('data/demo1_hsv.npy')
@@ -82,8 +80,6 @@ if len(contours) > 0:
 	# Get pixel depth
 	depth_pixel = depth_image[center[1], center[0]]
 
-	print(depth_pixel)
-
 	# Transform 2D to 3D camera coordinates
 	xcam, ycam, zcam = cam.intrinsic_trans(center, depth_pixel, cam.mtx)
 
@@ -93,54 +89,29 @@ if len(contours) > 0:
 	center_as_string = ''.join(str(center))
 
 	# Show
-	plt.figure(1)
-	plt.imshow(final_image)
-	plt.show()
-
-	# Transform camera coordinates to world coordinates
-	p_bt = np.dot(T_bc, numpy.array([[xcam], [ycam], [zcam], [1]]))
-
-	# Convert to transformation matrix
-	T_bt = np.array([[-1, 0, 0, p_bt[0][0]],
-					 [0, 1, 0, p_bt[1][0]],
-					 [0, 0, -1, 60],
-					 [ 0, 0, 0, 1]])
-
-	print(p_bt)
-
-	# Plot
-	#plot_frame_t(T_bc, ax)
-	#plot_frame_t(T_bt, ax)
+	#plt.figure(1)
+	#plt.imshow(final_image)
 	#plt.show()
 
-	# Set pose 1
-	error = [0, -15]
-	offset = [-math.sqrt(200) + error[0], -math.sqrt(200) + error[1], 170]
-	pose = [[T_bt[0][3] + offset[0], T_bt[1][3] + offset[1], T_bt[2][3] + offset[2]], list(quat_from_r(T_bt[:3,:3]))]	
-	robot.con.set_cartesian(pose)
-	time.sleep(1)
+	# Transform camera coordinates to world coordinates
+	p_tball = np.dot(np.linalg.inv(T_ct), numpy.array([[xcam], [ycam], [zcam], [1]]))
 
-	# Pick
-	robot.con.set_dio(1)
-	time.sleep(1)
+	# Convert to transformation matrix
+	T_cball = np.array([[1, 0, 0, xcam],
+						[0, 1, 0, ycam],
+						[0, 0, 1, zcam],
+						[0, 0, 0, 1]])
 
-	# Set pose 1 upper
-	pose = pose = [[T_bt[0][3] + offset[0], T_bt[1][3] + offset[1], T_bt[2][3] + offset[2] + 40], list(quat_from_r(T_bt[:3,:3]))]	
-	robot.con.set_cartesian(pose)
+	print(p_tball)
 
-	# Set pose 2 upper
-	pose = [[288.46, -330.19, 240 + 40], list(quat_from_r(T_bt[:3,:3]))]	
-	robot.con.set_cartesian(pose)
-	time.sleep(1)
+	print(np.dot(T_bc, T_ct))
 
-	# Set pose 2
-	pose = [[288.46, -330.19, 240], list(quat_from_r(T_bt[:3,:3]))]	
-	robot.con.set_cartesian(pose)
-	time.sleep(1)
+	# Plot
+	robot.plot(ax, np.array([0, 0, 0, 0, 0, 0]))
+	plot_frame_t(np.eye(4), ax)
+	plot_frame_t(T_bc, ax)
+	plot_frame_t(np.dot(T_bc, T_ct), ax)
+	plot_frame_t(np.dot(T_bc, T_cball), ax)
+	plt.show()
 
-	# Place
-	robot.con.set_dio(0)
-	time.sleep(1)
-
-	# Return to home
-	robot.con.set_joints([0, 0, 0, 0, 0, 0])
+	

@@ -1,5 +1,6 @@
 # Imports
 import cv2
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 from robot_demonstrator.Camera import Camera
@@ -20,8 +21,6 @@ objp = cam.size * objp
 # Loop
 count = 0
 while count < 10:
-
-    print(count)
 
     # Read images
     color_image, depth_image = cam.read()
@@ -51,12 +50,18 @@ while count < 10:
     plt.draw()
     plt.pause(0.1)
 
+    # Increment
+    time.sleep(2)
+    count += 1
+
 # Calculate intrinsics
 ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray_image.shape[::-1], None, None)
 print("intrinsieke matrix:\n")
 print(mtx)
+np.save('./data/mtx.npy', mtx)
 print("distortie:\n")
 print(dist)
+np.save('./data/distortion.npy', dist)
 
 # Calculate reprojection error
 mean_error = 0

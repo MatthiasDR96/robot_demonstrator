@@ -26,10 +26,10 @@ class ABB_IRB1200:
         # Create robot chain (millimeters, radians)
         self.add_revolute_joint(a=0.0, alpha=-1.5707963, d=399.1, offset=-pi/2, qlim=(radians(-170), radians(170)), dqlim=radians(288))
         self.add_revolute_joint(a=350, alpha=0.0, d=0.0, qlim=(radians(-100), radians(135)), dqlim=radians(240))
-        self.add_revolute_joint(a=42, alpha=-1.5707963, d=0.0, qlim=(radians(-170), radians(170)), dqlim=radians(300))
-        self.add_revolute_joint(a=0.0, alpha=1.5707963, d=351, qlim=(radians(-200), radians(70)), dqlim=radians(400))
+        self.add_revolute_joint(a=42, alpha=-1.5707963, d=0.0, qlim=(radians(-200), radians(70)), dqlim=radians(300))
+        self.add_revolute_joint(a=0.0, alpha=1.5707963, d=351, qlim=(radians(-270), radians(270)), dqlim=radians(400))
         self.add_revolute_joint(a=0.0, alpha=-1.5707963, d=0.0, qlim=(radians(-130), radians(130)), dqlim=radians(405))
-        self.add_revolute_joint(a=0.0, alpha=0.0, d=82, qlim=(radians(-400), radians(400)), dqlim=radians(600))
+        self.add_revolute_joint(a=0.0, alpha=0.0, d=82, qlim=(radians(-360), radians(360)), dqlim=radians(600))
 
         # Set tool frame
         #self.set_tool_frame(t_from_xyz_r(-20*math.sqrt(2), 20*math.sqrt(2), 170, np.eye(3)))
