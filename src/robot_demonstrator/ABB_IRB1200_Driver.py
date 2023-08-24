@@ -154,7 +154,7 @@ class ABB_IRB1200_Driver:
     def set_cartesian(self, pose):
         '''
         Executes a move immediately from the current pose,
-        to 'pose', with units of millimeters.
+        to 'pose', with units of millimeters. Quaterniosn as [w, x, y, z]
         '''
         msg = "01 " + self.format_pose(pose)
         return self.send(msg)
@@ -175,7 +175,7 @@ class ABB_IRB1200_Driver:
     
     def get_cartesian(self):
         '''
-        Returns the current pose of the robot, in millimeters
+        Returns the current pose of the robot, in millimeters with quaternions as [w, x, y, z]
         '''
         msg = "03 #"
         data = self.send(msg).split()

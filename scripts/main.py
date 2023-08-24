@@ -104,7 +104,7 @@ if len(contours) > 0:
 	T_bt = np.array([[-1, 0, 0, p_bt[0][0]],
 					 [0, 1, 0, p_bt[1][0]],
 					 [0, 0, -1, 60],
-					 [ 0, 0, 0, 1]])
+					 [0, 0, 0, 1]])
 
 	print(p_bt)
 
@@ -113,11 +113,15 @@ if len(contours) > 0:
 	#plot_frame_t(T_bt, ax)
 	#plt.show()
 
-	# Set pose 1
+	# Construct target pose
 	error = [0, -15]
 	offset = [-math.sqrt(200) + error[0], -math.sqrt(200) + error[1], 170]
-	pose = [[T_bt[0][3] + offset[0], T_bt[1][3] + offset[1], T_bt[2][3] + offset[2]], list(quat_from_r(T_bt[:3,:3]))]	
-	robot.con.set_cartesian(pose)
+	quat = list(quat_from_r(T_bt[:3,:3]))
+	quat = [quat[3], quat[0], quat[1], quat[2]]
+	xyz = [T_bt[0][3] + offset[0], T_bt[1][3] + offset[1], T_bt[2][3] + offset[2]]
+
+	# Set pose 1
+	robot.con.set_cartesian([xyz, quat])
 	time.sleep(1)
 
 	# Pick
@@ -125,16 +129,16 @@ if len(contours) > 0:
 	time.sleep(1)
 
 	# Set pose 1 upper
-	pose = pose = [[T_bt[0][3] + offset[0], T_bt[1][3] + offset[1], T_bt[2][3] + offset[2] + 40], list(quat_from_r(T_bt[:3,:3]))]	
+	pose = pose = [[T_bt[0][3] + offset[0], T_bt[1][3] + offset[1], T_bt[2][3] + offset[2] + 40], quat]	
 	robot.con.set_cartesian(pose)
 
 	# Set pose 2 upper
-	pose = [[288.46, -330.19, 240 + 40], list(quat_from_r(T_bt[:3,:3]))]	
+	pose = [[288.46, -330.19, 240 + 40], quat]	
 	robot.con.set_cartesian(pose)
 	time.sleep(1)
 
 	# Set pose 2
-	pose = [[288.46, -330.19, 240], list(quat_from_r(T_bt[:3,:3]))]	
+	pose = [[288.46, -330.19, 240], quat]	
 	robot.con.set_cartesian(pose)
 	time.sleep(1)
 
