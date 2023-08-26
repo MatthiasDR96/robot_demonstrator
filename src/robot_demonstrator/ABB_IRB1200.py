@@ -39,6 +39,12 @@ class ABB_IRB1200:
     
     def __iter__(self):
         return (each for each in self.links)
+
+    # Reset robot
+    def start(self):
+        self.con.set_speed([100, 50, 50, 50])
+        self.con.set_joints([0, 0, 0, 0, 0, 0])
+        self.con.set_dio(0)
      
     def set_base_frame(self, base_frame):
         self.base_frame = np.array(base_frame)

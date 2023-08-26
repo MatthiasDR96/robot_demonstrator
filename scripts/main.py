@@ -7,11 +7,8 @@ import matplotlib.pyplot as plt
 from robot_demonstrator.plot import *
 from robot_demonstrator.Camera import *
 from robot_demonstrator.transformations import *
+from robot_demonstrator.image_processing import *
 from robot_demonstrator.ABB_IRB1200 import ABB_IRB1200
-
-# Figure
-#fig = plt.figure()
-#ax = fig.add_subplot(111, projection='3d')
 
 # Define camera
 cam = Camera()
@@ -19,106 +16,66 @@ cam.start()
 
 # Define robot
 robot = ABB_IRB1200("192.168.125.1")
-
-# Reset robot
-robot.con.set_speed([100, 50, 50, 50])
-robot.con.set_joints([0, 0, 0, 0, 0, 0])
-robot.con.set_dio(0)
+robot.start()
 
 # Load T_bc
 T_bc = np.load('./data/T_bc.npy')
 
-# Read frame
-image, depth_image = cam.read()
+# Define rotations and positions
+quat = list(quat_from_r(np.array([[-1, 0, 0], [0, 1, 0], [0, 0, -1]])))
+quat = [quat[3], quat[0], quat[1], quat[2]]
+pose2 = [288.46, -330.19, 240]
+offset = np.array([0, 0, 40])
 
-# Get HSV calibration params 
-hsvfile = np.load('data/demo1_hsv.npy')
+# Loop
+while True:
 
-# Copy colour image
-final_image = image.copy()
+	# Wait for input
+	input()
 
-# Crop image
-cropx = 200
-cropy = 500
-color_image = image[cropx:1000, cropy:1500, :]
+	# Read frame
+	image, depth_image = cam.read()
 
-# Gaussian blur
-blurred_image = cv2.GaussianBlur(color_image, (7, 7), 0)
+	# Get perspective transformed image
+	image, M = get_perspective_image(image)
 
-# Convert to hsv color space
-hsv = cv2.cvtColor(blurred_image, cv2.COLOR_BGR2HSV)
+	# Get mask
+	mask = get_mask(image)
 
-# Get mask
-mask = cv2.inRange(hsv, np.array([hsvfile[0], hsvfile[2], hsvfile[4]]), np.array([hsvfile[1], hsvfile[3], hsvfile[5]]))
+	# Get object pixel
+	center, radius = get_object_pixel(mask)
 
-# Erode to close gaps
-mask = cv2.erode(mask, None, iterations=2)
-
-# Dilate to get original size
-mask = cv2.dilate(mask, None, iterations=2)
-
-# Find contours
-contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-# If ball is present
-if len(contours) > 0:
-
-	# Find contour with largest area
-	maxcontour = max(contours, key=cv2.contourArea)
-
-	# Find moments of the largest contour
-	moments = cv2.moments(maxcontour)
-
-	# Find ball center with moments
-	center = [int(moments["m10"] / moments["m00"]), int(moments["m01"] / moments["m00"])]
-
-	# Correct crop
-	center[0] += cropy
-	center[1] += cropx
-
-	# Find radius of circle
-	((x, y), radius) = cv2.minEnclosingCircle(maxcontour)
-
-	# Get pixel depth
-	depth_pixel = depth_image[center[1], center[0]]
-
-	print(depth_pixel)
-
-	# Transform 2D to 3D camera coordinates
-	xcam, ycam, zcam = cam.intrinsic_trans(center, depth_pixel, cam.mtx)
+	# Transform pixel back to original image plane
+	new_pixel = np.dot(np.linalg.inv(M), np.array([[center[0]], [center[1]], [1]]))
+	center = [int(new_pixel[0][0]), int(new_pixel[1][0])]
 
 	# Plot ball pixel
-	cv2.circle(final_image, center, 5, (0, 0, 255), -1)
-	cv2.circle(final_image, center, int(radius), (255, 0, 0), 5)
+	cv2.circle(image, center, 5, (0, 0, 255), -1)
+	cv2.circle(image, center, int(radius), (255, 0, 0), 5)
 	center_as_string = ''.join(str(center))
 
 	# Show
-	plt.figure(1)
-	plt.imshow(final_image)
+	plt.imshow(image)
 	plt.show()
 
-	# Transform camera coordinates to world coordinates
+	# Get pixel depth
+	pixel_depth = depth_image[center[1], center[0]]
+
+	# Transform 2D to 3D camera coordinates
+	xcam, ycam, zcam = cam.intrinsic_trans(center, pixel_depth, cam.mtx)
+
+	# Transform camera coordinates to robot base frame
 	p_bt = np.dot(T_bc, numpy.array([[xcam], [ycam], [zcam], [1]]))
-
-	# Convert to transformation matrix
-	T_bt = np.array([[-1, 0, 0, p_bt[0][0]],
-					 [0, 1, 0, p_bt[1][0]],
-					 [0, 0, -1, 60],
-					 [0, 0, 0, 1]])
-
-	print(p_bt)
-
-	# Plot
-	#plot_frame_t(T_bc, ax)
-	#plot_frame_t(T_bt, ax)
-	#plt.show()
+	p_bt = np.array([p_bt[0][0], p_bt[1][0], 60])
 
 	# Construct target pose
 	error = [0, -15]
-	offset = [-math.sqrt(200) + error[0], -math.sqrt(200) + error[1], 170]
-	quat = list(quat_from_r(T_bt[:3,:3]))
-	quat = [quat[3], quat[0], quat[1], quat[2]]
-	xyz = [T_bt[0][3] + offset[0], T_bt[1][3] + offset[1], T_bt[2][3] + offset[2]]
+	offset2 = np.array([-math.sqrt(200) + error[0], -math.sqrt(200) + error[1], 170])
+	xyz = p_bt + offset2
+
+	# Set pose 1 upper
+	robot.con.set_cartesian([xyz + offset, quat])
+	time.sleep(1)
 
 	# Set pose 1
 	robot.con.set_cartesian([xyz, quat])
@@ -129,17 +86,15 @@ if len(contours) > 0:
 	time.sleep(1)
 
 	# Set pose 1 upper
-	pose = pose = [[T_bt[0][3] + offset[0], T_bt[1][3] + offset[1], T_bt[2][3] + offset[2] + 40], quat]	
-	robot.con.set_cartesian(pose)
+	robot.con.set_cartesian([xyz + offset, quat])
+	time.sleep(1)
 
 	# Set pose 2 upper
-	pose = [[288.46, -330.19, 240 + 40], quat]	
-	robot.con.set_cartesian(pose)
+	robot.con.set_cartesian([pose2 + offset, quat])
 	time.sleep(1)
 
 	# Set pose 2
-	pose = [[288.46, -330.19, 240], quat]	
-	robot.con.set_cartesian(pose)
+	robot.con.set_cartesian([pose2, quat])
 	time.sleep(1)
 
 	# Place
@@ -148,3 +103,4 @@ if len(contours) > 0:
 
 	# Return to home
 	robot.con.set_joints([0, 0, 0, 0, 0, 0])
+	time.sleep(1)
