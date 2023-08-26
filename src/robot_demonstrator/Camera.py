@@ -114,20 +114,6 @@ class Camera:
 		else:
 			return None, None, None
 
-	# Convert camera to world coordinates
-	def extrinsic_trans(self, depth, x, y, z, ext):
-		if (depth):
-			mat = numpy.array([[x], [y], [z], [1]])
-			inv = ext #numpy.linalg.inv(ext)
-			world = numpy.dot(inv, mat)
-			xw, yw, zw = world[0, 0], world[1, 0], world[2, 0],
-			newx = yw
-			newy = xw
-			newz = -zw
-			return newx, newy, newz
-		else:
-			return None, None, None
-
 # Draws target axis
 def draw_axis(img, imgpts):
     img = cv2.line(img, tuple(imgpts[3].ravel()), tuple(imgpts[0].ravel()), (255, 0, 0), 5)

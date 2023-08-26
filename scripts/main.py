@@ -24,8 +24,10 @@ T_bc = np.load('./data/T_bc.npy')
 # Define rotations and positions
 quat = list(quat_from_r(np.array([[-1, 0, 0], [0, 1, 0], [0, 0, -1]])))
 quat = [quat[3], quat[0], quat[1], quat[2]]
-pose2 = [288.46, -330.19, 240]
-offset = np.array([0, 0, 40])
+pose2 = [288.46, -330.19, 240] # Place pose
+offset1 = np.array([0, 0, 40]) # Pick and place offset
+offset2 = np.array([-math.sqrt(200), -math.sqrt(200), 170]) # Tool offset
+error = [0, -15, 0] # Error in system --> to be reduced
 
 # Loop
 while True:
@@ -60,25 +62,27 @@ while True:
 
 	# Get pixel depth
 	pixel_depth = depth_image[center[1], center[0]]
+	if pixel_depth is None: print("No depth information")
+
+	# The xy pixel of the detected circle center equals this of the center of the ball as
+	# the ray goes through this ball, thus 'center' is correct. The pixel depth however should 
+	# be increased with the ball radius to obtain the 3D coordinate of the centre. 
+	pixel_depth += 30
 
 	# Transform 2D to 3D camera coordinates
-	xcam, ycam, zcam = cam.intrinsic_trans(center, pixel_depth, cam.mtx)
+	pixel_coor = np.array(center[0], center[0], pixel_depth)
+	xyz_cam = np.dot(np.linalg.inv(cam.mtx), pixel_coor)
 
 	# Transform camera coordinates to robot base frame
-	p_bt = np.dot(T_bc, numpy.array([[xcam], [ycam], [zcam], [1]]))
-	p_bt = np.array([p_bt[0][0], p_bt[1][0], 60])
-
-	# Construct target pose
-	error = [0, -15]
-	offset2 = np.array([-math.sqrt(200) + error[0], -math.sqrt(200) + error[1], 170])
-	xyz = p_bt + offset2
+	p_bt = np.dot(T_bc, xyz_cam.apend([1]))
+	xyz_base = np.array([p_bt[0][0], p_bt[1][0], 60]) + offset2 + error
 
 	# Set pose 1 upper
-	robot.con.set_cartesian([xyz + offset, quat])
+	robot.con.set_cartesian([xyz_base + offset1, quat])
 	time.sleep(1)
 
 	# Set pose 1
-	robot.con.set_cartesian([xyz, quat])
+	robot.con.set_cartesian([xyz_base, quat])
 	time.sleep(1)
 
 	# Pick
@@ -86,11 +90,11 @@ while True:
 	time.sleep(1)
 
 	# Set pose 1 upper
-	robot.con.set_cartesian([xyz + offset, quat])
+	robot.con.set_cartesian([xyz_base + offset1, quat])
 	time.sleep(1)
 
 	# Set pose 2 upper
-	robot.con.set_cartesian([pose2 + offset, quat])
+	robot.con.set_cartesian([pose2 + offset1, quat])
 	time.sleep(1)
 
 	# Set pose 2
