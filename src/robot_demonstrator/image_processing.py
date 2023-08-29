@@ -51,7 +51,7 @@ def get_object_pixel(mask):
         ((x, y), radius) = cv2.minEnclosingCircle(maxcontour)
 
         # Return 
-        return (x, y), radius
+        return (int(x), int(y)), radius
 
     # No contour found
     else:

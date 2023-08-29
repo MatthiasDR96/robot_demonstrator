@@ -33,13 +33,13 @@ error = [0, -15, 0] # Error in system --> to be reduced
 while True:
 
 	# Wait for input
-	input()
+	input('\nPress any key to continue ...')
 
 	# Read frame
 	image, depth_image = cam.read()
 
 	# Get perspective transformed image
-	image, M = get_perspective_image(image)
+	#image, M = get_perspective_image(image)
 
 	# Get mask
 	mask = get_mask(image)
@@ -48,8 +48,8 @@ while True:
 	center, radius = get_object_pixel(mask)
 
 	# Transform pixel back to original image plane
-	new_pixel = np.dot(np.linalg.inv(M), np.array([[center[0]], [center[1]], [1]]))
-	center = [int(new_pixel[0][0]), int(new_pixel[1][0])]
+	#new_pixel = np.dot(np.linalg.inv(M), np.array([[center[0]], [center[1]], [1]]))
+	#center = [int(new_pixel[0][0]), int(new_pixel[1][0])]
 
 	# Plot ball pixel
 	cv2.circle(image, center, 5, (0, 0, 255), -1)
@@ -70,11 +70,10 @@ while True:
 	pixel_depth += 30
 
 	# Transform 2D to 3D camera coordinates
-	pixel_coor = np.array(center[0], center[0], pixel_depth)
-	xyz_cam = np.dot(np.linalg.inv(cam.mtx), pixel_coor)
+	xcam, ycam, zcam = cam.intrinsic_trans(center, pixel_depth, cam.mtx)
 
 	# Transform camera coordinates to robot base frame
-	p_bt = np.dot(T_bc, xyz_cam.apend([1]))
+	p_bt = np.dot(T_bc, numpy.array([[xcam], [ycam], [zcam], [1]]))
 	xyz_base = np.array([p_bt[0][0], p_bt[1][0], 60]) + offset2 + error
 
 	# Set pose 1 upper
