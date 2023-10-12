@@ -4,8 +4,11 @@ import yaml
 import numpy as np
 from robot_demonstrator.Camera import Camera
 
+# File name
+file_name = './data/demo1_hsv_disk.npy'
+
 # Read data from previous calibrations
-hsvfile = np.load('./data/demo1_hsv.npy')
+hsvfile = np.load(file_name)
 
 # Get camera
 cam = Camera()
@@ -93,4 +96,5 @@ while True:
 
 # Save data
 hsvarray = np.array([hmin, hmax, smin, smax, vmin, vmax])
-np.save('data/demo1_hsv.npy', hsvarray)
+print(hsvarray)
+np.save(file_name, hsvarray)

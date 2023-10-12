@@ -21,13 +21,19 @@ robot.start()
 # Load T_bc
 T_bc = np.load('./data/T_bc.npy')
 
+# Load T_bc
+M = np.load('./data/perspective_transform.npy')
+
 # Define rotations and positions
+grip_heigt_ball = 60
+grip_heigth_disk = 8
 quat = list(quat_from_r(np.array([[-1, 0, 0], [0, 1, 0], [0, 0, -1]])))
 quat = [quat[3], quat[0], quat[1], quat[2]]
+grip_height = grip_heigth_disk
 pose2 = [288.46, -330.19, 240] # Place pose
 offset1 = np.array([0, 0, 40]) # Pick and place offset
 offset2 = np.array([-math.sqrt(200), -math.sqrt(200), 170]) # Tool offset
-error = [0, -15, 0] # Error in system --> to be reduced
+error = [15, -40, 0] # Error in system --> to be reduced
 
 # Loop
 while True:
@@ -38,18 +44,18 @@ while True:
 	# Read frame
 	image, depth_image = cam.read()
 
-	# Get perspective transformed image
-	#image, M = get_perspective_image(image)
-
 	# Get mask
 	mask = get_mask(image)
+
+	# Warp image
+	mask = cv2.warpPerspective(mask, M, (np.shape(image)[1], np.shape(image)[0]))
 
 	# Get object pixel
 	center, radius = get_object_pixel(mask)
 
 	# Transform pixel back to original image plane
-	#new_pixel = np.dot(np.linalg.inv(M), np.array([[center[0]], [center[1]], [1]]))
-	#center = [int(new_pixel[0][0]), int(new_pixel[1][0])]
+	new_pixel = np.dot(np.linalg.inv(M), np.array([[center[0]], [center[1]], [1]]))
+	center = [int(new_pixel[0][0]/new_pixel[2][0]), int(new_pixel[1][0]/new_pixel[2][0])]
 
 	# Plot ball pixel
 	cv2.circle(image, center, 5, (0, 0, 255), -1)
@@ -67,14 +73,14 @@ while True:
 	# The xy pixel of the detected circle center equals this of the center of the ball as
 	# the ray goes through this ball, thus 'center' is correct. The pixel depth however should 
 	# be increased with the ball radius to obtain the 3D coordinate of the centre. 
-	pixel_depth += 30
+	#pixel_depth += 30
 
 	# Transform 2D to 3D camera coordinates
 	xcam, ycam, zcam = cam.intrinsic_trans(center, pixel_depth, cam.mtx)
 
 	# Transform camera coordinates to robot base frame
 	p_bt = np.dot(T_bc, numpy.array([[xcam], [ycam], [zcam], [1]]))
-	xyz_base = np.array([p_bt[0][0], p_bt[1][0], 60]) + offset2 + error
+	xyz_base = np.array([p_bt[0][0], p_bt[1][0], grip_height]) + offset2 + error
 
 	# Set pose 1 upper
 	robot.con.set_cartesian([xyz_base + offset1, quat])

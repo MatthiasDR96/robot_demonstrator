@@ -40,7 +40,7 @@ plt.show()
 
 # Get pixel depth
 pixel_depth = depth_image[center[1], center[0]]
-if pixel_depth is None: print("No depth information")
+if pixel_depth is None or pixel_depth < 10: print("No depth information")
 
 # Transform 2D to 3D camera coordinates
 xcam, ycam, zcam = cam.intrinsic_trans(center, pixel_depth, cam.mtx)

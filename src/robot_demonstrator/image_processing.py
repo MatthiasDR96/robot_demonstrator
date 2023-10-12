@@ -1,11 +1,12 @@
 # Imports
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 
 def get_mask(image):
 
     # Get HSV calibration params 
-    hsvfile = np.load('data/demo1_hsv.npy')
+    hsvfile = np.load('data/demo1_hsv_disk.npy')
 
     # Crop properties
     xstart, ystart, xend, yend = 500, 200, 1500, 1000
@@ -57,22 +58,3 @@ def get_object_pixel(mask):
     else:
         print("No contour found")
         return None
-
-def get_perspective_image(image):
-
-    # Define points
-    pts1 = np.float32([[270,0],[1640,0],[0,830],[1920,680]])
-    pts2 = np.float32([[0,0],[1920,0],[0,830],[1920,680]])
-
-    # Plot points
-    #for val in pts1: cv2.circle(image,(int(val[0]),int(val[1])),5,(0,255,0),-1)
-
-    # Get perspective transformation
-    M = cv2.getPerspectiveTransform(pts1, pts2)
-
-    # Warp image
-    dst = cv2.warpPerspective(image, M, (np.shape(image)[1], np.shape(image)[0]))
-
-    # Return
-    return dst, M
-
