@@ -25,7 +25,7 @@ print(robot.con.get_robotinfo())
 joints = [0, 0, 0, 0, 0, 0]
 
 # Set joint goal
-robot.con.set_joints(joints)
+#robot.con.set_joints(joints)
 #robot.con.set_cartesian([[400.0, 200.0, 600.1], [ 0.5, -0.5, 0.5, -0.5 ]]) # w, x, y, z --> send to [-0.5, 0.5, -0.5, 0.5]
 #robot.con.set_cartesian([[400.0, 200.0, 600.1], [0, 0, 1, 0]]) # w, x, y, z --> send to [0, 1, 0, 0]
 #robot.con.set_cartesian([[400.0, 200.0, 600.1], [0, 1, 0, 0]]) # w, x, y, z --> send to [1, 0, 0, 0]

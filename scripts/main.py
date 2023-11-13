@@ -21,7 +21,7 @@ robot.start()
 # Load T_bc
 T_bc = np.load('./data/T_bc.npy')
 
-# Load T_bc
+# Load perspective matrix
 M = np.load('./data/perspective_transform.npy')
 
 # Define rotations and positions
@@ -30,16 +30,13 @@ grip_heigth_disk = 8
 quat = list(quat_from_r(np.array([[-1, 0, 0], [0, 1, 0], [0, 0, -1]])))
 quat = [quat[3], quat[0], quat[1], quat[2]]
 grip_height = grip_heigth_disk
-pose2 = [288.46, -330.19, 240] # Place pose
+pose2 = [483.0, -290.9, 240] # Place pose
 offset1 = np.array([0, 0, 40]) # Pick and place offset
-offset2 = np.array([-math.sqrt(200), -math.sqrt(200), 170]) # Tool offset
-error = [15, -40, 0] # Error in system --> to be reduced
+offset2 = np.array([-math.sqrt(200), -math.sqrt(200), 169]) # Tool offset
+error = [15, 10, 0] # Error in system --> to be reduced
 
 # Loop
 while True:
-
-	# Wait for input
-	input('\nPress any key to continue ...')
 
 	# Read frame
 	image, depth_image = cam.read()
@@ -52,6 +49,9 @@ while True:
 
 	# Get object pixel
 	center, radius = get_object_pixel(mask)
+
+	# If no mask found, continue
+	if center is None: continue
 
 	# Transform pixel back to original image plane
 	new_pixel = np.dot(np.linalg.inv(M), np.array([[center[0]], [center[1]], [1]]))

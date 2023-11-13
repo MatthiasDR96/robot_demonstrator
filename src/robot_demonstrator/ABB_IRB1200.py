@@ -2,7 +2,6 @@
 from math import *
 from scipy.optimize import minimize
 from robot_demonstrator.transformations import *
-from robot_demonstrator.interpolator import *
 from robot_demonstrator.ABB_IRB1200_Driver import *
 from robot_demonstrator.plot import *
 

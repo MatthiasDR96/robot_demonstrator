@@ -14,6 +14,9 @@ def get_mask(image):
     # Crop image
     color_image = image[200:1000, 500:1500, :]
 
+    plt.imshow(color_image)
+    plt.show
+
     # Gaussian blur
     blurred_image = cv2.GaussianBlur(color_image, (7, 7), 0)
 
@@ -56,5 +59,5 @@ def get_object_pixel(mask):
 
     # No contour found
     else:
-        print("No contour found")
-        return None
+        print("No contour found!")
+        return None, None
