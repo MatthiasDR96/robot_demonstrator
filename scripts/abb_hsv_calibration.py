@@ -96,5 +96,4 @@ while True:
 
 # Save data
 hsvarray = np.array([hmin, hmax, smin, smax, vmin, vmax])
-print(hsvarray)
 np.save(file_name, hsvarray)

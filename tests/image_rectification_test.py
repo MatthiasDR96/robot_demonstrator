@@ -3,68 +3,62 @@ import cv2
 import numpy as np 
 import matplotlib.pyplot as plt
 from robot_demonstrator.image_processing import *
+from robot_demonstrator.Camera import *
 
 # Read image
-image1 =  cv2.imread('./data/perspective_1_Color.png')
-image2 =  cv2.imread('./data/perspective_2_Color.png')
-image3 =  cv2.imread('./data/perspective_1_ball_Color.png')
+#image1 =  cv2.imread('./data/perspective_1_Color1_Color.png')
 
-# Convert to grayscale
-gray1 = cv2.cvtColor(image1, cv2.COLOR_BGR2GRAY)
-gray2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
+# Define camera
+cam = Camera()
+cam.start()
 
-# Get chessboard corners
-ret, corners1 = cv2.findChessboardCornersSB(gray1, (9, 14), cv2.CALIB_CB_MARKER)
-ret, corners2 = cv2.findChessboardCornersSB(gray2, (9, 14), cv2.CALIB_CB_MARKER)
+# Read frame
+image, depth_image = cam.read()
 
-# Show
-#cv2.drawChessboardCorners(image1, (9,14), corners1,ret)
-#plt.imshow(image1)
-#plt.show()
+print(np.shape(image))
 
-#cv2.drawChessboardCorners(image2, (9,14), corners2,ret)
-#plt.imshow(image2)
-#plt.show()
+plt.imshow(image)
+plt.show()
 
-corners1 = np.array([corners1[0], corners1[8], corners1[-1], corners1[-9]])
-corners2 = np.array([corners2[0], corners2[8], corners2[-1], corners2[-9]])
+# Define corners
+corners1 = np.array([(100, 1080), (421, 0), (1378, 0), (1625, 1080)])
+corners2 = np.array([(0, 1080), (0, 0), (1920, 0), (1920, 1080)])
 
 # Get perspective transformation
 M = cv2.getPerspectiveTransform(np.float32(np.resize(corners1, (4, 2))), np.float32(np.resize(corners2, (4, 2))))
 np.save('./data/perspective_transform.npy', M)
 
-# Get mask
-mask = get_mask(image3)
-mask2 = get_mask(image1)
-
 # Warp image
-dst = cv2.warpPerspective(mask, M, (np.shape(image1)[1], np.shape(image1)[0]))
+dst = cv2.warpPerspective(image, M, (np.shape(image)[1], np.shape(image)[0]))
+
+# Get mask
+#mask1 = get_mask(image1)
+mask2 = get_mask(dst)
+
+plt.imshow(mask2)
+plt.show()
 
 # Get center pixel
-center, radius = get_object_pixel(dst)
-center2, radius = get_object_pixel(mask2)
+#center1, radius, _ = get_object_pixel(mask1)
+center2, radius, _ = get_object_pixel(mask2)
 
 # Plot ball pixel
-cv2.circle(dst, center, 5, (0, 0, 255), -1)
-cv2.circle(dst, center, int(radius), (255, 0, 0), 5)
-center_as_string = ''.join(str(center))
+cv2.circle(dst, center2, 5, (0, 0, 255), -1)
+cv2.circle(dst, center2, int(radius), (255, 0, 0), 5)
 
 # Show
 plt.imshow(dst)
 plt.show()
 
 # Transform pixel back to original image plane
-new_pixel = np.dot(np.linalg.inv(M), np.array([[center[0]], [center[1]], [1]]))
+new_pixel = np.dot(np.linalg.inv(M), np.array([[center2[0]], [center2[1]], [1]]))
 center = [int(new_pixel[0][0]/new_pixel[2][0]), int(new_pixel[1][0]/new_pixel[2][0])]
 
-print (center)
-print(center2)
-
 # Plot ball pixel
-cv2.circle(image3, center, 5, (0, 0, 255), -1)
-cv2.circle(image3, center, int(radius), (255, 0, 0), 5)
+cv2.circle(image, center, 5, (0, 0, 255), -1)
+cv2.circle(image, center, int(radius), (255, 0, 0), 5)
 center_as_string = ''.join(str(center))
 
 # Show
-plt.imshow(image3)
+plt.imshow(image)
 plt.show()

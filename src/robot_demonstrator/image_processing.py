@@ -9,16 +9,13 @@ def get_mask(image):
     hsvfile = np.load('data/demo1_hsv_disk.npy')
 
     # Crop properties
-    xstart, ystart, xend, yend = 500, 200, 1500, 1000
+    #xstart, ystart, xend, yend = 400, 300, 1400, 900
 
     # Crop image
-    color_image = image[200:1000, 500:1500, :]
-
-    plt.imshow(color_image)
-    plt.show
+    #color_image = image[ystart:yend, xstart:xend, :]
 
     # Gaussian blur
-    blurred_image = cv2.GaussianBlur(color_image, (7, 7), 0)
+    blurred_image = cv2.GaussianBlur(image, (7, 7), 0)
 
     # Convert to hsv color space
     hsv = cv2.cvtColor(blurred_image, cv2.COLOR_BGR2HSV)
@@ -33,11 +30,11 @@ def get_mask(image):
     mask = cv2.dilate(mask, None, iterations=2)
 
     # Get original dimensions of image
-    new_mask = np.zeros(np.shape(image)[0:2]).astype(np.uint8)
-    new_mask[ystart:yend, xstart:xend] = mask
+    #new_mask = np.zeros(np.shape(image)[0:2]).astype(np.uint8)
+    #new_mask[ystart:yend, xstart:xend] = mask
 
     # Return mask
-    return new_mask
+    return mask
 
 
 def get_object_pixel(mask):
@@ -48,16 +45,28 @@ def get_object_pixel(mask):
     # If there is a contour
     if len(contours) > 0:
 
-        # Find contour with largest area
-        maxcontour = max(contours, key=cv2.contourArea)
+        # Filter contours
+        contours_tmp = [contour for contour in contours if cv2.contourArea(contour) > 7000]
+        contours_tmp = [contour for contour in contours_tmp if cv2.contourArea(contour) < 9000]
 
-        # Find radius of circle
-        ((x, y), radius) = cv2.minEnclosingCircle(maxcontour)
+        # Check if contours are left
+        if len(contours_tmp) > 0:
 
-        # Return 
-        return (int(x), int(y)), radius
+            # Select first one
+            selected_contour = contours_tmp[0]
+
+            # Find radius of circle
+            ((x, y), radius) = cv2.minEnclosingCircle(selected_contour)
+
+            # Return 
+            return (int(x), int(y)), radius, contours_tmp
+        
+        # No contour found
+        else:
+            print("No contour found!")
+            return None, None, None
 
     # No contour found
     else:
         print("No contour found!")
-        return None, None
+        return None, None, None

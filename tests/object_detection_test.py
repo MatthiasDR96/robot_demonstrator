@@ -23,13 +23,17 @@ while True:
 	# Read frame
 	image, depth_image = cam.read()
 
+	# Warp image
+	#image = cv2.warpPerspective(image, M, (np.shape(image)[1], np.shape(image)[0]))
+
 	# Get mask
 	mask = get_mask(image)
-	
-	print(mask)
-
-	# Warp image
-	#mask = cv2.warpPerspective(mask, M, (np.shape(image)[1], np.shape(image)[0]))
 
 	# Get object pixel
-	#center, radius = get_object_pixel(mask)
+	center, radius, contours_tmp = get_object_pixel(mask)
+
+	cv2.drawContours(image, contours_tmp, -1, (0,255,0), 3)
+
+	plt.imshow(image)
+	plt.draw()
+	plt.pause(0.1)

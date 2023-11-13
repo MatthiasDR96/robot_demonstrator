@@ -113,6 +113,15 @@ class Camera:
 			return x, y, z
 		else:
 			return None, None, None
+		
+	# Covert 2D to 3D cooridnates
+	def intrinsic_trans_inv(self, x, y, z, mtx):
+		if (z):
+			u = x * mtx[0, 0] * z + mtx[0, 2] 
+			v = y * mtx[1, 1] * z + mtx[1, 2]
+			return u, v
+		else:
+			return None, None
 
 # Draws target axis
 def draw_axis(img, imgpts):
