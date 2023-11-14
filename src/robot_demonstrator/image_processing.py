@@ -1,18 +1,12 @@
 # Imports
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
+
 
 def get_mask(image):
 
     # Get HSV calibration params 
     hsvfile = np.load('data/demo1_hsv_disk.npy')
-
-    # Crop properties
-    #xstart, ystart, xend, yend = 400, 300, 1400, 900
-
-    # Crop image
-    #color_image = image[ystart:yend, xstart:xend, :]
 
     # Gaussian blur
     blurred_image = cv2.GaussianBlur(image, (7, 7), 0)
@@ -28,11 +22,7 @@ def get_mask(image):
 
     # Dilate to get original size
     mask = cv2.dilate(mask, None, iterations=2)
-
-    # Get original dimensions of image
-    #new_mask = np.zeros(np.shape(image)[0:2]).astype(np.uint8)
-    #new_mask[ystart:yend, xstart:xend] = mask
-
+    
     # Return mask
     return mask
 

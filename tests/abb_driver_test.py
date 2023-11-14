@@ -2,7 +2,6 @@
 import time
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
-from robot_demonstrator.Motion import *
 from robot_demonstrator.plot import *
 from robot_demonstrator.transformations import *
 from robot_demonstrator.ABB_IRB1200 import ABB_IRB1200

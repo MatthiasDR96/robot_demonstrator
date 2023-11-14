@@ -36,7 +36,6 @@ for point in imgpts_point:
     new_pixel = np.dot(M, np.append(point[0], 1))
     center = [int(new_pixel[0]/new_pixel[2]), int(new_pixel[1]/new_pixel[2])]
     new_pixels.append(center)
-
 imgpts_point = new_pixels
 
 # Read frame

@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
     name='robot_demonstrator',
     version='1.0.0',
-    url='',
+    url='https://github.com/MatthiasDR96/robot_demonstrator',
     license='BSD',
     author='Matthias De Ryck',
     author_email='matthias.deryck@kuleuven.be',

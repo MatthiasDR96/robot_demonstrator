@@ -38,7 +38,7 @@ for i in range(len(joint_values_list)):
     joint_values = joint_values_list[i]
 
     # Read image
-    img = cv2.imread('./data/image' + str(i+1) + '.jpg')
+    img = cv2.imread('./data/camera_robot_caibration_images/image' + str(i+1) + '.jpg')
 
     # Get transformation matrix from camera to target
     ret, corners2, rvecs, tvecs, T_ct = cam.extrinsic_calibration(img)

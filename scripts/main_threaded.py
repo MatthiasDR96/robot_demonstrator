@@ -1,9 +1,9 @@
 # Imports
-import _thread
 import cv2
 import time
 import math
 import time
+import _thread
 import numpy as np
 import matplotlib.pyplot as plt
 from robot_demonstrator.plot import *
@@ -220,7 +220,7 @@ def camera_task(name):
 # Create two threads as follows
 try:
 	_thread.start_new_thread(camera_task, ("Thread-1", ) )
-	_thread.start_new_thread(robot_task, ("Thread-1", ) )
+	_thread.start_new_thread(robot_task, ("Thread-2", ) )
 except:
 	print ("Error: unable to start thread")
 
