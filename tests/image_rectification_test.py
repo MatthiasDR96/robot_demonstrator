@@ -1,3 +1,8 @@
+""" 
+This script tests the image rectification functionality.
+
+"""
+
 # Imports
 import cv2
 import numpy as np 

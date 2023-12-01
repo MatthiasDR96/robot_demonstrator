@@ -1,5 +1,4 @@
 # Imports
-import os
 import cv2
 import numpy
 import pyrealsense2 as realsense
@@ -12,13 +11,14 @@ class Camera:
 		self.color_resolution = (1920, 1080)
 		self.depth_resolution = (1280, 720)
 		self.frames_per_second = 30
+		self.id = '821312060307'
 
 		# Camera connection properties
 		self.conn = None
 		self.conf = None
 		self.align = None
 
-		# Camera calibration properties
+		# Camera calibration properties (calculated from 'abb_camera_calibration.py'-file)
 		self.mtx = numpy.load('./data/mtx.npy')
 		self.dist = numpy.load('./data/distortion.npy')
 
@@ -27,6 +27,7 @@ class Camera:
 		self.b = 9
 		self.size = 17.4 # mm
 
+	# Start camera readout
 	def start(self):
 
 		# Connect
@@ -34,7 +35,7 @@ class Camera:
 
 		# Config
 		self.conf = realsense.config()
-		self.conf.enable_device('821312060307')
+		self.conf.enable_device(self.id)
 		self.conf.enable_stream(realsense.stream.depth, self.depth_resolution[0], self.depth_resolution[1], realsense.format.z16, self.frames_per_second)
 		self.conf.enable_stream(realsense.stream.color, self.color_resolution[0], self.color_resolution[1], realsense.format.bgr8, self.frames_per_second)
 		
@@ -44,6 +45,13 @@ class Camera:
 		# Align images
 		self.align = realsense.align(realsense.stream.color)
 
+	# Stop camera readout
+	def close(self):
+
+		# Stop streaming
+		self.conn.stop()
+
+	# Read frame
 	def read(self):
 
 		# Wait for image
@@ -114,7 +122,7 @@ class Camera:
 		else:
 			return None, None, None
 		
-	# Covert 2D to 3D cooridnates
+	# Covert 3D to 2D cooridnates
 	def intrinsic_trans_inv(self, x, y, z, mtx):
 		if (z):
 			u = x * mtx[0, 0] * z + mtx[0, 2] 
@@ -122,17 +130,3 @@ class Camera:
 			return u, v
 		else:
 			return None, None
-
-# Draws target axis
-def draw_axis(img, imgpts):
-    img = cv2.line(img, tuple(imgpts[3].ravel()), tuple(imgpts[0].ravel()), (255, 0, 0), 5)
-    img = cv2.line(img, tuple(imgpts[3].ravel()), tuple(imgpts[1].ravel()), (0, 255, 0), 5)
-    img = cv2.line(img, tuple(imgpts[3].ravel()), tuple(imgpts[2].ravel()), (0, 0, 255), 5)
-    text_pos = (imgpts[0].ravel() + np.array([3.5, -7])).astype(int)
-    cv2.putText(img, 'X', tuple(text_pos), cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 255))
-    text_pos = (imgpts[1].ravel() + np.array([3.5, -7])).astype(int)
-    cv2.putText(img, 'Y', tuple(text_pos), cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 255))
-    text_pos = (imgpts[2].ravel() + np.array([3.5, -7])).astype(int)
-    cv2.putText(img, 'Z', tuple(text_pos), cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 255))
-    text_pos = (imgpts[3].ravel() + np.array([3.5, -7])).astype(int)
-    return img

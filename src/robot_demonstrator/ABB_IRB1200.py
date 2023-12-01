@@ -31,7 +31,7 @@ class ABB_IRB1200:
         self.add_revolute_joint(a=0.0, alpha=0.0, d=82, offset=pi, qlim=(radians(-360), radians(360)), dqlim=radians(600))
 
         # Set tool frame
-        #self.set_tool_frame(t_from_xyz_r(-20*math.sqrt(2), 20*math.sqrt(2), 170, np.eye(3)))
+        self.set_tool_frame(t_from_xyz_r(-20*math.sqrt(2), 20*math.sqrt(2), 170, np.eye(3)))
 
         # Attribute for tcp-ip connection
         if not ip is None: self.con = ABB_IRB1200_Driver(ip, port_motion=5000)
