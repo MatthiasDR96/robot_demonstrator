@@ -53,6 +53,10 @@ for index in range(len(labels)):
 data = np.array(data)
 data_gt = np.array(data_gt)
 
+# Save data
+np.save('./data/labels_data', data)
+np.save('./data/labels_gt_data', data_gt)
+
 # Plot data
 fig = plt.figure()
 ax = fig.add_subplot(projection='3d')
@@ -62,7 +66,7 @@ ax.scatter(0, 0, 0, 'k*') # Plot robot
 ax.set_xlabel('X (mm)')
 ax.set_ylabel('Y (mm)')
 ax.set_zlabel('Z (mm)')
-# ax.set_aspect('equal')
-plot_frame_t(T_bc, ax) # Plot camera frame
-robot.plot(ax, np.array([0, 0, 0, 0, 0, 0])) # Plot robot in home pose
+ax.set_aspect('equal')
+#plot_frame_t(T_bc, ax) # Plot camera frame
+#robot.plot(ax, np.array([0, 0, 0, 0, 0, 0])) # Plot robot in home pose
 plt.show()
