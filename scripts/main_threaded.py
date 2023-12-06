@@ -132,16 +132,19 @@ def camera_task(name):
 		# Get object pixel from the mask
 		center, radius, contours_tmp = get_object_pixel(mask)
 
+		# Draw contours
+		contours_tmp = cv2.drawContours(warped_image.copy(), contours_tmp, -1, (0,255,0), 3)
+
 		# If no object pixel found, continue
 		if center:
-
-			# Transform pixel on warped image back to original image
-			new_pixel = np.dot(np.linalg.inv(M), np.array([[center[0]], [center[1]], [1]]))
-			center = [int(new_pixel[0][0]/new_pixel[2][0]), int(new_pixel[1][0]/new_pixel[2][0])]
 
 			# Plot ball pixel
 			cv2.circle(warped_image, center, 5, (0, 0, 255), -1)
 			cv2.circle(warped_image, center, int(radius), (255, 0, 0), 5)
+
+			# Transform pixel on warped image back to original image
+			new_pixel = np.dot(np.linalg.inv(M), np.array([[center[0]], [center[1]], [1]]))
+			center = [int(new_pixel[0][0]/new_pixel[2][0]), int(new_pixel[1][0]/new_pixel[2][0])]
 
 			# Get pixel depth
 			pixel_depth = depth_image[center[1], center[0]]
@@ -203,7 +206,7 @@ def camera_task(name):
 			break 
 
 		# Display the warped image with contours
-		final_image = cv2.resize(cv2.drawContours(warped_image.copy(), contours_tmp, -1, (0,255,0), 3), (int(1920/2), int(1080/2)))  
+		final_image = cv2.resize(contours_tmp, (int(1920/2), int(1080/2)))  
 		cv2.imshow('frame2', final_image)
 		cv2.resizeWindow("frame2", (int(1920/2), int(1080/2)))  
 		cv2.moveWindow("frame2", 0, int(1080/2))

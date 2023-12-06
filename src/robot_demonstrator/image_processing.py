@@ -22,11 +22,14 @@ def get_mask(image):
     # Get mask based on HSV-values
     mask = cv2.inRange(hsv, np.array([hsvfile[0], hsvfile[2], hsvfile[4]]), np.array([hsvfile[1], hsvfile[3], hsvfile[5]]))
 
+    # Creating kernel 
+    kernel = np.ones((10, 10), np.uint8)
+
     # Erode to close gaps
-    mask = cv2.erode(mask, None, iterations=2)
+    mask = cv2.erode(mask, kernel, iterations=2)
 
     # Dilate to get original size
-    mask = cv2.dilate(mask, None, iterations=2)
+    mask = cv2.dilate(mask, kernel, iterations=2)
     
     # Return mask
     return mask
@@ -41,8 +44,7 @@ def get_object_pixel(mask):
     if len(contours) > 0:
 
         # Filter contours by area
-        contours_tmp = [contour for contour in contours if cv2.contourArea(contour) > 4500]
-        contours_tmp = [contour for contour in contours_tmp if cv2.contourArea(contour) < 9000]
+        contours_tmp = [contour for contour in contours if cv2.minEnclosingCircle(contour)[1] > 55 and cv2.minEnclosingCircle(contour)[1] < 70]
 
         # Check if contours are left
         if len(contours_tmp) > 0:
