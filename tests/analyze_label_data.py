@@ -5,6 +5,7 @@ This script analyzes the computed XYZ-coordinates and compares them to the groun
 
 # Imports 
 import os
+import math
 import numpy as np
 import matplotlib.pyplot as plt
 from robot_demonstrator.Camera import Camera
@@ -16,6 +17,9 @@ from robot_demonstrator.ABB_IRB1200 import ABB_IRB1200
 # File name
 file_name_labels = './data/labels/'
 file_name_labels_gt = './data/labels_gt/'
+
+# Correction due to tool
+correction = [math.sqrt(200), math.sqrt(200), 0]
 
 # Create robot object (offline)
 robot = ABB_IRB1200()
@@ -46,6 +50,7 @@ for index in range(len(labels)):
 	line = file.readline().split(' ')
 	if len(line) > 1:
 		line = [float(x) for x in line]
+		line = list(np.array(line) + correction)
 		data_gt.append(line)
 	file.close()
 

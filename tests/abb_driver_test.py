@@ -19,7 +19,7 @@ ax = fig.add_subplot(111, projection='3d')
 robot = ABB_IRB1200("192.168.125.1")
 
 # Set speed
-robot.con.set_speed(speed=[10, 10, 10, 10])
+#robot.con.set_speed(speed=[10, 10, 10, 10])
 
 # Get info
 print(robot.con.get_tool())
@@ -29,37 +29,37 @@ print(robot.con.get_robotinfo())
 joints = [0, 0, 0, 0, 0, 0]
 
 # Set joint goal
-#robot.con.set_joints(joints)
-robot.con.set_cartesian([[400.0, -50.0, 177.0], [0, 0, 1, 0]]) # w, x, y, z --> send to [-0.5, 0.5, -0.5, 0.5]
+robot.con.set_joints(joints)
+#robot.con.set_cartesian([[300.0, -150.0, 177.0], [0, 0, 1, 0]]) # w, x, y, z --> send to [-0.5, 0.5, -0.5, 0.5]
 #robot.con.set_cartesian([[400.0, 200.0, 600.1], [0, 0, 1, 0]]) # w, x, y, z --> send to [0, 1, 0, 0]
 #robot.con.set_cartesian([[400.0, 200.0, 600.1], [0, 1, 0, 0]]) # w, x, y, z --> send to [1, 0, 0, 0]
 
 # Sleep
-time.sleep(4)
+#time.sleep(4)
 
 # Get joints
-joints = np.radians(robot.con.get_joints())
+#joints = np.radians(robot.con.get_joints())
 
 # Get Cartesian pose
-pose1_abb = robot.con.get_cartesian() # [[X, Y, Z], [w, x, y, z]]
+#pose1_abb = robot.con.get_cartesian() # [[X, Y, Z], [w, x, y, z]]
 
 # Convert to transformation matrix
-T_be1 = t_from_xyz_r(pose1_abb[0][0], pose1_abb[0][1], pose1_abb[0][2], r_from_quat(pose1_abb[1][1], pose1_abb[1][2], pose1_abb[1][3], pose1_abb[1][0]))
+#T_be1 = t_from_xyz_r(pose1_abb[0][0], pose1_abb[0][1], pose1_abb[0][2], r_from_quat(pose1_abb[1][1], pose1_abb[1][2], pose1_abb[1][3], pose1_abb[1][0]))
 
 # Print ABB Cartesian format
-print([pose1_abb[0], [pose1_abb[1][1], pose1_abb[1][2], pose1_abb[1][3], pose1_abb[1][0]]])
+#print([pose1_abb[0], [pose1_abb[1][1], pose1_abb[1][2], pose1_abb[1][3], pose1_abb[1][0]]])
 
 # Robot forward kinematics
-T_be2 = robot.fkine(np.array(joints))
+#T_be2 = robot.fkine(np.array(joints))
 
 # Convert to ABB Cartesian format
-pose1_fkine = [[round(T_be2[0, 3], 1), round(T_be2[1, 3], 1), round(T_be2[2, 3], 1)], list(np.round(quat_from_r(T_be2[:3, :3]), 3))]
-print(pose1_fkine)
+#pose1_fkine = [[round(T_be2[0, 3], 1), round(T_be2[1, 3], 1), round(T_be2[2, 3], 1)], list(np.round(quat_from_r(T_be2[:3, :3]), 3))]
+#print(pose1_fkine)
 
 # Plot robot
-robot.plot(ax, np.array(joints)) # Plot robot in home pose
-plot_frame_t(T_be1, ax) # Plot frame obtained from Cartesian readout
-plt.show()
+#robot.plot(ax, np.array(joints)) # Plot robot in home pose
+#plot_frame_t(T_be1, ax) # Plot frame obtained from Cartesian readout
+#plt.show()
 
 
 

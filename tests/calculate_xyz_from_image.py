@@ -34,7 +34,7 @@ for index in range(len(images)):
 	# Get image
 	image = cv2.imread(os.path.join(file_name_images_rgb, images[index]))
 	depth = np.load(os.path.join(file_name_images_depth, images[index].replace('.jpg', '.npy')))
-	
+
 	# Warp image as if the camera took the image from above, perpendicular to the table
 	warped_image = cv2.warpPerspective(image, M, (np.shape(image)[1], np.shape(image)[0]))
 

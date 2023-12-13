@@ -44,7 +44,7 @@ def get_object_pixel(mask):
     if len(contours) > 0:
 
         # Filter contours by area
-        contours_tmp = [contour for contour in contours if cv2.minEnclosingCircle(contour)[1] > 55 and cv2.minEnclosingCircle(contour)[1] < 70]
+        contours_tmp = [contour for contour in contours if cv2.minEnclosingCircle(contour)[1] > 40 and cv2.minEnclosingCircle(contour)[1] < 75]
 
         # Check if contours are left
         if len(contours_tmp) > 0:
