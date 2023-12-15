@@ -45,7 +45,7 @@ offset1 = np.array([0, 0, 40]) # Offset above the pick and place poses
 tool_offset = np.array([-math.sqrt(200), -math.sqrt(200), 170]) # Tool offset (Translation from robot end effector to TCP)
 
 # Define error
-error = [15, 10, 0] # Error in system (visually determined) --> to be reduced
+error = [7, 2, 0] #[15, 10, 0] # Error in system (visually determined) --> to be reduced
 
 # Robot boundaries
 xmin = 400 # Minimal Cartesian x-position
@@ -79,6 +79,9 @@ def robot_task(name):
 			# Final safety layer on Cartesian position
 			if not (xyz_base_tmp[0] > xmax or xyz_base_tmp[0] < xmin or xyz_base_tmp[1] > ymax or xyz_base_tmp[1] < ymin):
 
+				# Debug
+				print("\nRobot - Start picking object!\n")
+
 				# Set pick pose upper
 				robot.con.set_cartesian([xyz_base_tmp + offset1, quat])
 				time.sleep(1)
@@ -109,6 +112,13 @@ def robot_task(name):
 
 				# Set home position
 				robot.con.set_joints([0, 0, 0, 0, 0, 0])
+				time.sleep(1)
+
+				# Debug
+				print("\nRobot - Finished picking object!\n")
+
+			else:
+				print("\nRobot - Object not reachable!\n")
 				time.sleep(1)
 	
 # Define a function for the thread

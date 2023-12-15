@@ -63,10 +63,10 @@ def get_object_pixel(mask):
         
         # No contour found
         else:
-            print("No contour found! (Contours in mask not in area range)")
+            print("Camera - No contour found! (Contours in mask not in area range)")
             return None, None, None
 
     # No contour found
     else:
-        print("No contour found! (No contour in mask)")
+        print("Camera - No contour found! (No contour in mask)")
         return None, None, None
