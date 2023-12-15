@@ -3,7 +3,9 @@ import cv2
 import time
 import math
 import time
+import pickle
 import _thread
+import warnings
 import numpy as np
 import matplotlib.pyplot as plt
 from robot_demonstrator.plot import *
@@ -11,6 +13,9 @@ from robot_demonstrator.Camera import *
 from robot_demonstrator.transformations import *
 from robot_demonstrator.image_processing import *
 from robot_demonstrator.ABB_IRB1200 import ABB_IRB1200
+
+# Suppress all warnings
+warnings.filterwarnings('ignore')
 
 # Create camera object
 cam = Camera()
@@ -30,6 +35,9 @@ T_bc = np.load('./data/T_bc.npy')
 # Load perspective matrix (calculated using the image_rectification_test.py file)
 M = np.load('./data/perspective_transform.npy')
 
+# Load error model
+model = pickle.load(open('./data/error_model_20231215.sav', 'rb'))
+
 # Define pick and place orientation
 quat = list(quat_from_r(np.array([[-1, 0, 0], [0, 1, 0], [0, 0, -1]]))) # Quaternion of the pick and place orientation
 quat = [quat[3], quat[0], quat[1], quat[2]] # Convert [x y z w] to [w x y z]
@@ -38,17 +46,17 @@ quat = [quat[3], quat[0], quat[1], quat[2]] # Convert [x y z w] to [w x y z]
 grip_height = 7
 
 # Define place position
-pose_place = [483.0, 290.9, 240] 
+pose_place = [450.0, 290.0, 220] 
 
 # Define offsets
 offset1 = np.array([0, 0, 40]) # Offset above the pick and place poses
 tool_offset = np.array([-math.sqrt(200), -math.sqrt(200), 170]) # Tool offset (Translation from robot end effector to TCP)
 
 # Define error
-error = [7, 3, 0] # Error in system obtained from data collection --> to be reduced
+error = [0, 0, 0] # [7, 3, 0]  Error in system obtained from data collection --> to be reduced
 
 # Robot boundaries
-xmin = 400 # Minimal Cartesian x-position
+xmin = 350 # Minimal Cartesian x-position
 xmax = 630 # Maximal Cartesian x-position
 ymin = -250 # Minimal Cartesian y-position
 ymax = 250 # Maximal Cartesian y-position
@@ -59,7 +67,7 @@ ax = fig.add_subplot(111, projection='3d')
 
 # Global params
 global xyz_base
-xyz_base = None
+xyz_base = []
 
 # Robot task thread function
 def robot_task(name):
@@ -70,56 +78,55 @@ def robot_task(name):
 	# Loop
 	while True:
 
-		# Check if there is a valid position
-		if xyz_base is not None:
+		# Sleep
+		time.sleep(1)
 
-			# Fixed last position
-			xyz_base_tmp = xyz_base
+		# Get feasible positions
+		xyz_base_feasible = [xyz for xyz in xyz_base if not (xyz[0] > xmax or xyz[0] < xmin or xyz[1] > ymax or xyz[1] < ymin)]
 
-			# Final safety layer on Cartesian position
-			if not (xyz_base_tmp[0] > xmax or xyz_base_tmp[0] < xmin or xyz_base_tmp[1] > ymax or xyz_base_tmp[1] < ymin):
+		# Check if there are feasible positions
+		if len(xyz_base_feasible) < 1: continue
 
-				# Debug
-				print("\nRobot - Start picking object!\n")
+		# Get first element
+		xyz_base_tmp = xyz_base_feasible[0]
 
-				# Set pick pose upper
-				robot.con.set_cartesian([xyz_base_tmp + offset1, quat])
-				time.sleep(1)
+		# Debug
+		print("\nRobot - Start picking object!\n")
 
-				# Set pick pose
-				robot.con.set_cartesian([xyz_base_tmp, quat])
-				time.sleep(1)
+		# Set pick pose upper
+		robot.con.set_cartesian([xyz_base_tmp + offset1, quat])
+		time.sleep(1)
 
-				# Set pick DIO
-				robot.con.set_dio(1)
-				time.sleep(1)
+		# Set pick pose
+		robot.con.set_cartesian([xyz_base_tmp, quat])
+		time.sleep(1)
 
-				# Set pick pose upper
-				robot.con.set_cartesian([xyz_base_tmp + offset1, quat])
-				time.sleep(1)
+		# Set pick DIO
+		robot.con.set_dio(1)
+		time.sleep(1)
 
-				# Set place pose upper
-				robot.con.set_cartesian([pose_place + offset1, quat])
-				time.sleep(1)
+		# Set pick pose upper
+		robot.con.set_cartesian([xyz_base_tmp + offset1, quat])
+		time.sleep(1)
 
-				# Set place pose
-				robot.con.set_cartesian([pose_place, quat])
-				time.sleep(1)
+		# Set place pose upper
+		robot.con.set_cartesian([pose_place + offset1, quat])
+		time.sleep(1)
 
-				# Set place DIO
-				robot.con.set_dio(0)
-				time.sleep(1)
+		# Set place pose
+		robot.con.set_cartesian([pose_place, quat])
+		time.sleep(1)
 
-				# Set home position
-				robot.con.set_joints([0, 0, 0, 0, 0, 0])
-				time.sleep(1)
+		# Set place DIO
+		robot.con.set_dio(0)
+		time.sleep(1)
 
-				# Debug
-				print("\nRobot - Finished picking object!\n")
+		# Set home position
+		robot.con.set_joints([0, 0, 0, 0, 0, 0])
+		time.sleep(1)
 
-			else:
-				print("\nRobot - Object not reachable!\n")
-				time.sleep(1)
+		# Debug
+		print("\nRobot - Finished picking object!\n")
 	
 # Define a function for the thread
 def camera_task(name):
@@ -133,6 +140,12 @@ def camera_task(name):
 		# Read frame
 		image, depth_image = cam.read()
 
+		# Undistort image
+		h, w = image.shape[:2]
+		newcameramtx, roi = cv2.getOptimalNewCameraMatrix(cam.mtx, cam.dist, (w,h), 1, (w,h))
+		mapx, mapy = cv2.initUndistortRectifyMap(cam.mtx, cam.dist, None, newcameramtx, (w, h), 5)
+		image = cv2.remap(image, mapx, mapy, cv2.INTER_LINEAR)
+
 		# Warp image as if the camera took the image from above, perpendicular to the table
 		warped_image = cv2.warpPerspective(image, M, (np.shape(image)[1], np.shape(image)[0]))
 
@@ -140,13 +153,18 @@ def camera_task(name):
 		mask = get_mask(warped_image)
 
 		# Get object pixel from the mask
-		center, radius, contours_tmp = get_object_pixel(mask)
+		data, contours_tmp = get_object_pixel(mask)
 
 		# Draw contours
 		contours_tmp = cv2.drawContours(warped_image.copy(), contours_tmp, -1, (0,255,0), 3)
 
-		# If no object pixel found, continue
-		if center:
+		# Loop over all contours
+		robot_locations = []
+		for sample in data:
+
+			# Get data
+			center = sample[0]
+			radius = sample[1]
 
 			# Plot ball pixel
 			cv2.circle(warped_image, center, 5, (0, 0, 255), -1)
@@ -169,14 +187,15 @@ def camera_task(name):
 				p_bt = np.dot(T_bc, numpy.array([[xcam], [ycam], [zcam], [1]])) # Position of the object in robot base frame
 
 				# Create pick position for robot considering grip height and tool offset
-				xyz_base = np.array([p_bt[0][0], p_bt[1][0], grip_height]) + tool_offset + error
+				xyz = np.array([p_bt[0][0], p_bt[1][0], grip_height]) + tool_offset
 
-			# Wrong picking pojnt
-			else: xyz_base = None
-		
-		# Wrong picking point
-		else: xyz_base = None
+				# Remove error using trained model
+				error = model.predict([xyz])[0]
+				xyz = xyz - (np.append(error[0:2], [0]))
 
+				#xyz_base = xyz[0]
+				robot_locations.append(list(xyz))
+				xyz_base = robot_locations
 
 		### The code below is to calculate the pixel coordinates of the robot bounds
 

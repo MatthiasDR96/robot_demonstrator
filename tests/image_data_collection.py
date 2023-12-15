@@ -20,7 +20,7 @@ cam = Camera()
 cam.start()
 
 # Loop
-counter = 0
+counter = 30
 while(True): 
       
     # Read frame

@@ -31,7 +31,7 @@ T_bc = np.load('./data/T_bc.npy')
 labels = os.listdir(file_name_labels)
 
 # Make data list
-data = []
+data_meas = []
 data_gt = []
 
 # Loop over images
@@ -42,7 +42,7 @@ for index in range(len(labels)):
 	line = file.readline().split(' ')
 	if len(line) > 1:
 		line = [float(x) for x in line]
-		data.append(line)
+		data_meas.append(line)
 	file.close()
 
 	# Open ground truth xyz_location to txt
@@ -55,18 +55,20 @@ for index in range(len(labels)):
 	file.close()
 
 # Convert to numpy array
-data = np.array(data)
+data_meas = np.array(data_meas)
 data_gt = np.array(data_gt)
+error = data_meas - data_gt
 
 # Save data
-np.save('./data/labels_data', data)
+np.save('./data/labels_data', data_meas)
 np.save('./data/labels_gt_data', data_gt)
 
 # Plot data
-fig = plt.figure()
+fig = plt.figure(1)
 ax = fig.add_subplot(projection='3d')
-ax.scatter(data[:,0], data[:,1], data[:,2], 'g*') # Plot data
+ax.scatter(data_meas[:,0], data_meas[:,1], data_meas[:,2], 'g*') # Plot data
 ax.scatter(data_gt[:,0], data_gt[:,1], data_gt[:,2], 'r*') # Plot ground truth
+ax.scatter(data_gt[:,0], data_gt[:,1], np.linalg.norm(error[:, 0:2], axis=1)*10, 'g*') # Plot error
 ax.scatter(0, 0, 0, 'k*') # Plot robot 
 ax.set_xlabel('X (mm)')
 ax.set_ylabel('Y (mm)')

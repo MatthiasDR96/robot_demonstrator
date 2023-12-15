@@ -22,15 +22,10 @@ def get_mask(image):
     # Get mask based on HSV-values
     mask = cv2.inRange(hsv, np.array([hsvfile[0], hsvfile[2], hsvfile[4]]), np.array([hsvfile[1], hsvfile[3], hsvfile[5]]))
 
-    # Creating kernel 
-    kernel = np.ones((10, 10), np.uint8)
+    # Perform the opening operation
+    size = 25
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2*size+1, 2*size+1)))
 
-    # Erode to close gaps
-    mask = cv2.erode(mask, kernel, iterations=2)
-
-    # Dilate to get original size
-    mask = cv2.dilate(mask, kernel, iterations=2)
-    
     # Return mask
     return mask
 
@@ -40,33 +35,17 @@ def get_object_pixel(mask):
     # Find contours
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    # If there is a contour
-    if len(contours) > 0:
+    # Filter contours by area
+    contours_tmp = [contour for contour in contours if cv2.minEnclosingCircle(contour)[1] > 40 and cv2.minEnclosingCircle(contour)[1] < 75]
+    
+    # Filter contours by aspect ration
+    contours_tmp = [contour for contour in contours_tmp if 1.0 < float(cv2.boundingRect(contour)[2])/cv2.boundingRect(contour)[3] < 2.0]
+    
+    # Calculate center and radius for all contours
+    data = []
+    for cnt in contours_tmp:
+        ((x, y), radius) = cv2.minEnclosingCircle(cnt)
+        data.append(((int(x), int(y)), radius))
 
-        # Filter contours by area
-        contours_tmp = [contour for contour in contours if cv2.minEnclosingCircle(contour)[1] > 40 and cv2.minEnclosingCircle(contour)[1] < 75]
-
-        # Check if contours are left
-        if len(contours_tmp) > 0:
-
-            # Sort contours on x-position
-            contours_tmp.sort(key=lambda ctr: cv2.minEnclosingCircle(ctr[0])[0][0])
-
-            # Select most left one
-            selected_contour = contours_tmp[0]
-
-            # Find center point and radius of contour
-            ((x, y), radius) = cv2.minEnclosingCircle(selected_contour)
-
-            # Return 
-            return (int(x), int(y)), radius, contours_tmp
-        
-        # No contour found
-        else:
-            print("Camera - No contour found! (Contours in mask not in area range)")
-            return None, None, None
-
-    # No contour found
-    else:
-        print("Camera - No contour found! (No contour in mask)")
-        return None, None, None
+    # Return 
+    return data, contours_tmp

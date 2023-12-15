@@ -34,8 +34,12 @@ image, depth_image = cam.read()
 # Get mask of objects to detect
 mask = get_mask(image)
 
-# Get pixel coordinate of object to detect
-center, radius = get_object_pixel(mask)
+# Get object pixel from the mask
+data, contours_tmp = get_object_pixel(mask)
+
+# Get data
+center = data[0][0]
+radius = data[0][1]
 
 # Plot detected pixel
 cv2.circle(image, center, 5, (0, 0, 255), -1)
