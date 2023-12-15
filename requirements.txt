@@ -4,3 +4,4 @@ numpy
 matplotlib
 pyrealsense2
 scipy
+scikit-learn

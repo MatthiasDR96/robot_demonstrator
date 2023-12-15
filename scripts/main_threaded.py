@@ -36,7 +36,7 @@ T_bc = np.load('./data/T_bc.npy')
 M = np.load('./data/perspective_transform.npy')
 
 # Load error model
-model = pickle.load(open('./data/error_model_20231215.sav', 'rb'))
+model = pickle.load(open('./data/error_model.sav', 'rb'))
 
 # Define pick and place orientation
 quat = list(quat_from_r(np.array([[-1, 0, 0], [0, 1, 0], [0, 0, -1]]))) # Quaternion of the pick and place orientation
