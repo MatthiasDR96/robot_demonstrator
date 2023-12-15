@@ -45,7 +45,7 @@ offset1 = np.array([0, 0, 40]) # Offset above the pick and place poses
 tool_offset = np.array([-math.sqrt(200), -math.sqrt(200), 170]) # Tool offset (Translation from robot end effector to TCP)
 
 # Define error
-error = [7, 2, 0] #[15, 10, 0] # Error in system (visually determined) --> to be reduced
+error = [7, 3, 0] # Error in system obtained from data collection --> to be reduced
 
 # Robot boundaries
 xmin = 400 # Minimal Cartesian x-position
